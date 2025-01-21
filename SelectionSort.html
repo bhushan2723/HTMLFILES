@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection Sort Visualization</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #0277bd;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            background-color: rgba(19, 13, 13, 0.8);
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls button {
+            background-color: #ff7043;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .controls button:hover {
+            background-color: #ff5722;
+        }
+
+        .controls input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 2px solid #0277bd;
+        }
+
+        #array-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .box {
+            background-color: #42a5f5;
+            width: 60px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            font-size: 1.2em;
+            color: white;
+            border-radius: 8px;
+            transition: transform 0.5s, background-color 0.3s, height 0.5s;
+        }
+
+        .box.current {
+            background-color: #ffeb3b;
+        }
+
+        .box.sorted {
+            background-color: #4caf50;
+        }
+
+        #result {
+            font-size: 1.3em;
+            color: #0277bd;
+            margin-top: 20px;
+        }
+
+        @keyframes moveElement {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .box.swapping {
+            animation: moveElement 0.5s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Selection Sort Visualization</h1>
+
+    <div class="controls">
+        <label for="user-input">Enter an array (comma-separated):</label>
+        <input type="text" id="user-input" placeholder="e.g. 10, 4, 2, 6, 1">
+        <button onclick="startSelectionSort()">Start Sorting</button>
+    </div>
+
+    <div id="array-container"></div>
+    <p id="result"></p>
+
+    <script>
+        let array = [];
+
+        function renderArray() {
+            const arrayContainer = document.getElementById("array-container");
+            arrayContainer.innerHTML = "";
+            array.forEach((num) => {
+                const box = document.createElement("div");
+                box.className = "box";
+                box.style.height = `${num * 4}px`;
+                box.textContent = num;
+                arrayContainer.appendChild(box);
+            });
+        }
+
+        async function selectionSort(arr) {
+            const n = arr.length;
+            const boxes = document.querySelectorAll(".box");
+
+            for (let i = 0; i < n - 1; i++) {
+                let minIndex = i;
+                highlightCurrentElement(minIndex);
+
+                for (let j = i + 1; j < n; j++) {
+                    highlightComparison(i, j);
+                    await new Promise((resolve) => setTimeout(resolve, 800));
+
+                    if (arr[j] < arr[minIndex]) {
+                        minIndex = j;
+                    }
+                }
+
+                if (minIndex !== i) {
+                    highlightSwap(i, minIndex);
+                    await new Promise((resolve) => setTimeout(resolve, 800));
+
+                    [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];
+                    boxes[i].textContent = arr[i];
+                    boxes[minIndex].textContent = arr[minIndex];
+                    boxes[i].style.height = `${arr[i] * 4}px`;
+                    boxes[minIndex].style.height = `${arr[minIndex] * 4}px`;
+                }
+
+                boxes[i].classList.add("sorted");
+            }
+
+            document.getElementById("result").textContent = "Array sorted successfully!";
+        }
+
+        function highlightCurrentElement(index) {
+            const boxes = document.querySelectorAll(".box");
+            boxes.forEach((box, i) => {
+                box.classList.remove("current");
+                if (i === index) {
+                    box.classList.add("current");
+                }
+            });
+        }
+
+        function highlightComparison(index1, index2) {
+            const boxes = document.querySelectorAll(".box");
+            boxes[index1].classList.add("swapping");
+            boxes[index2].classList.add("swapping");
+
+            setTimeout(() => {
+                boxes[index1].classList.remove("swapping");
+                boxes[index2].classList.remove("swapping");
+            }, 500);
+        }
+
+        function highlightSwap(index1, index2) {
+            const boxes = document.querySelectorAll(".box");
+            boxes[index1].classList.add("swapping");
+            boxes[index2].classList.add("swapping");
+
+            setTimeout(() => {
+                boxes[index1].classList.remove("swapping");
+                boxes[index2].classList.remove("swapping");
+            }, 500);
+        }
+
+        async function startSelectionSort() {
+            const input = document.getElementById("user-input").value;
+            array = input.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+
+            if (array.length === 0) {
+                document.getElementById("result").textContent = "Please enter a valid array.";
+                return;
+            }
+
+            renderArray();
+            await selectionSort(array);
+        }
+    </script>
+</body>
+</html>
