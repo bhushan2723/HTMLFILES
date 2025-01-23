@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Sort Visualization</title>
+    <link rel="stylesheet" href="quick.css">
+    <style>
+    body {
+        background-color: #e6dce7;
+        font-family: 'Arial', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        flex-direction: column;
+    }
+
+    h1 {
+        color: #00796b;
+        font-size: 3em;
+        margin-bottom: 20px;
+    }
+
+    .controls {
+        margin-bottom: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 400px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .controls input {
+        width: 70%;
+        padding: 10px;
+        font-size: 1.2em;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 2px solid #00796b;
+    }
+
+    .controls button {
+        padding: 12px 20px;
+        font-size: 1.2em;
+        background-color: #00796b;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .controls button:hover {
+        background-color: #004d40;
+    }
+
+    #array-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 30px;
+        width: 90%;
+        flex-wrap: wrap;
+    }
+
+    .box {
+        background-color: #42a5f5;
+        width: 50px;
+        height: 150px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        font-size: 1.2em;
+        color: white;
+        border-radius: 5px;
+        transition: transform 0.4s ease, background-color 0.3s;
+    }
+
+    .box.pivot {
+        background-color: #ffeb3b;
+    }
+
+    .box.sorted {
+        background-color: #66bb6a;
+    }
+
+    #result {
+        margin-top: 20px;
+        font-size: 1.2em;
+        color: #00796b;
+    }
+
+    @keyframes moveElement {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .box.swapping {
+        animation: moveElement 0.5s ease-in-out;
+    }
+
+</style>
+</head>
+<body>
+    <h1>Quick Sort Visualization</h1>
+
+    <div class="controls">
+        <input type="text" id="user-input" placeholder="Enter numbers (e.g. 10, 4, 2, 6, 1)">
+        <button onclick="startQuickSort()">Start Sorting</button>
+    </div>
+
+    <div id="array-container"></div>
+    <p id="result"></p>
+
+    <script>
+        let array = [];
+
+        function renderArray() {
+            const arrayContainer = document.getElementById("array-container");
+            arrayContainer.innerHTML = "";
+            array.forEach((num) => {
+                const box = document.createElement("div");
+                box.className = "box";
+                box.style.height = `${num * 3}px`;
+                box.textContent = num;
+                arrayContainer.appendChild(box);
+            });
+        }
+
+        // Quick Sort Algorithm
+        async function quickSort(arr, low, high) {
+            if (low < high) {
+                const pi = await partition(arr, low, high);
+
+                // Recursively apply Quick Sort
+                await quickSort(arr, low, pi - 1);
+                await quickSort(arr, pi + 1, high);
+            }
+        }
+
+        async function partition(arr, low, high) {
+            const pivot = arr[high];
+            const boxes = document.querySelectorAll(".box");
+
+            let i = low - 1;
+
+            // Highlight pivot
+            highlightPivot(high);
+
+            for (let j = low; j < high; j++) {
+                // Highlight comparison elements
+                highlightComparison(j, high);
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                if (arr[j] < pivot) {
+                    i++;
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+
+                    // Update box content and heights
+                    boxes[i].textContent = arr[i];
+                    boxes[j].textContent = arr[j];
+                    boxes[i].style.height = `${arr[i] * 3}px`;
+                    boxes[j].style.height = `${arr[j] * 3}px`;
+
+                    boxes[i].classList.add("swapping");
+                    boxes[j].classList.add("swapping");
+
+                    // Reset swap animation
+                    setTimeout(() => {
+                        boxes[i].classList.remove("swapping");
+                        boxes[j].classList.remove("swapping");
+                    }, 500);
+                }
+            }
+
+            // Place pivot at the correct position
+            [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+
+            boxes[i + 1].textContent = arr[i + 1];
+            boxes[high].textContent = arr[high];
+            boxes[i + 1].style.height = `${arr[i + 1] * 3}px`;
+            boxes[high].style.height = `${arr[high] * 3}px`;
+
+            // Highlight pivot as sorted
+            boxes[i + 1].classList.add("sorted");
+
+            return i + 1;
+        }
+
+        function highlightPivot(index) {
+            const boxes = document.querySelectorAll(".box");
+            boxes.forEach(box => box.classList.remove("pivot"));
+            boxes[index].classList.add("pivot");
+        }
+
+        function highlightComparison(index1, index2) {
+            const boxes = document.querySelectorAll(".box");
+            boxes[index1].classList.add("swapping");
+            boxes[index2].classList.add("swapping");
+
+            setTimeout(() => {
+                boxes[index1].classList.remove("swapping");
+                boxes[index2].classList.remove("swapping");
+            }, 500);
+        }
+
+        async function startQuickSort() {
+            const input = document.getElementById("user-input").value;
+            array = input.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+
+            if (array.length === 0) {
+                document.getElementById("result").textContent = "Please enter a valid array.";
+                return;
+            }
+
+            renderArray();
+            await quickSort(array, 0, array.length - 1);
+            document.getElementById("result").textContent = "Array sorted successfully!";
+        }
+    </script>
+</body>
+</html>
